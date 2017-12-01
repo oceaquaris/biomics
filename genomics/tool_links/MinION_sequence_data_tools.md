@@ -22,4 +22,3 @@
 | Read Until | Selective sequencing | https://github.com/mattloose/RUscripts |
 | Nanocall | Local base-calling | https://github.com/mateidavid/nanocall |
 | DeepNano | Recurrent neural network (RNN)-based base-calling | https://bitbucket.org/vboza/deepnano |
-[1](https://doi.org/10.1186/s13059-016-1103-0)
