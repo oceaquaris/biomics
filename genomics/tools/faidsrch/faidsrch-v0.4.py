@@ -157,7 +157,8 @@ if outfasta == None:
 # Process input query file
 with open(inquery, "r") as inqueryraw:
     for line in inqueryraw:
-        query.append(line.rstrip('\n')) # strip \n and append to query list
+        if len(line.rstrip('\n')) > 0:
+            query.append(line.rstrip('\n')) # strip \n and append to query list
 #*********************************************************#
 
 
