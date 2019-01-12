@@ -10,6 +10,9 @@ from Bio import SeqIO
 #*****************************************************************************#
 # Variables required for script function
 
+# MODIFY ME: regexp expression to use to find strings
+regexp = None
+
 # MODIFY ME: Input file name
 infasta = None
 
@@ -37,6 +40,11 @@ query = []
 query_counts = None
 
 # MODIFY ME: boolean
+#   Perform a basic search?
+basic_search = False
+basic_search_override = False
+
+# MODIFY ME: boolean
 #   Perform a case sensitive search?
 case_sensitive = True
 
@@ -57,33 +65,42 @@ fasta_entry_count = 0
 # Process command line arguments
 usage = "Usage: faidsrch [OPTION]...\n\n"\
         "  Input/Output:\n"\
-        "    -f, --in-fasta       FASTA file to search in.\n"\
-        "    -o, --out-fasta      FASTA file to output search results to.\n"\
-        "    -s, --out-stats      File to output tab-delimited stats of search results.\n"\
-        "    -q, --in-query-file  Path of file containing queries. One query per line.\n\n"\
+        "    -E, --extended-regexp STR   Extended regular expression (ERE)"\
+        "    -f, --in-fasta        FILE  FASTA file to search in.\n"\
+        "    -o, --out-fasta       FILE  FASTA file to output search results to.\n"\
+        "    -s, --out-stats       FILE  File to output tab-delimited stats of search results.\n"\
+        "    -q, --in-query-file   FILE  Query file. One query per line.\n\n"\
         "  Search Options:\n"\
-        "    -e, --elim-dups-sort Eliminate duplicate entries and sort.\n"\
-        "                         Default: Do not eliminate duplicate entries.\n"\
-        "    -i, --ignore-case    Set case sensitivity to case-insensitive.\n"\
-        "                         Default: Case sensitive.\n\n"\
+        "    -b, --basic-search    Perform a basic search (locate substrings) instead.\n"\
+        "                          Default: Extended regexp if specified.\n"\
+        "    -e, --elim-dups-sort  Eliminate duplicate entries and sort.\n"\
+        "                          Default: Do not eliminate duplicate entries.\n"\
+        "    -i, --ignore-case     Set case sensitivity to case-insensitive.\n"\
+        "                          Default: Case sensitive.\n\n"\
         "  Miscellaneous:\n"\
-        "    -h, --help           Print this help message.\n"
+        "    -h, --help            Print this help message.\n"
 
 arg = 1
 state = 0
 while arg < len(sys.argv):
     if state == 0:
-        if sys.argv[arg] == "-f" or sys.argv[arg] == "--in-fasta":
+        if sys.argv[arg] == "-E" or sys.argv[arg] == "--extended-regexp":
             state = 1
             arg += 1
-        elif sys.argv[arg] == "-o" or sys.argv[arg] == "--out-fasta":
+        elif sys.argv[arg] == "-f" or sys.argv[arg] == "--in-fasta":
             state = 2
             arg += 1
-        elif sys.argv[arg] == "-s" or sys.argv[arg] == "--out-stats":
+        elif sys.argv[arg] == "-o" or sys.argv[arg] == "--out-fasta":
             state = 3
             arg += 1
-        elif sys.argv[arg] == "-q" or sys.argv[arg] == "--in-query-file":
+        elif sys.argv[arg] == "-s" or sys.argv[arg] == "--out-stats":
             state = 4
+            arg += 1
+        elif sys.argv[arg] == "-q" or sys.argv[arg] == "--in-query-file":
+            state = 5
+            arg += 1
+        elif sys.argv[arg] == "-b" or sys.argv[arg] == "--basic-search":
+            basic_search_override = True
             arg += 1
         elif sys.argv[arg] == "-e" or sys.argv[arg] == "--elim-dups-sort":
             sort_elim_dups = True
@@ -99,23 +116,28 @@ while arg < len(sys.argv):
             print(usage)
             quit(1)
 
-    # -f, --in-fasta
+    # -E, --extended-regexp
     elif state == 1:
+        regexp = sys.argv[arg]
+        state = 0
+        arg += 1
+    # -f, --in-fasta
+    elif state == 2:
         infasta = sys.argv[arg]
         state = 0
         arg += 1
     # -o, --out-fasta
-    elif state == 2:
+    elif state == 3:
         outfasta = sys.argv[arg]
         state = 0
         arg += 1
     # -s, --out-stats
-    elif state == 3:
+    elif state == 4:
         outstats = sys.argv[arg]
         state = 0
         arg += 1
     # -q, --in-query-file
-    elif state == 4:
+    elif state == 5:
         inquery = sys.argv[arg]
         state = 0
         arg += 1
@@ -150,7 +172,11 @@ if inquery != None:
 # Make sure outfasta is OK
 if outfasta == None:
     print("The output fasta file is not specified. Exiting.")
-    quit()
+    quit(1)
+
+# Make sure regexp is sane
+if regexp == None:
+    basic_search = True
 #*********************************************************#
 
 
@@ -179,19 +205,25 @@ query_counts = [0] * len(query)
 
 #*********************************************************#
 # Memory efficient Python generator function
-def find_entry(infasta, qList, qcList, caseSensitive):
+def find_entry(infasta, qList, qcList, caseSensitive, regExp):
     for r in SeqIO.parse(infasta, "fasta"):
         identifier = r.id if caseSensitive == True else r.id.upper()
         for q in xrange(len(qList)):
             seq = qList[q] if caseSensitive == True else qList[q].upper()
-            if identifier.find(seq) != -1:
-                qcList[q] += 1
-                yield r
+            if regExp != None:
+                m = re.search(regExp, identifier)
+                if m and (m.group(1) == seq):
+                    qcList[q] += 1
+                    yield r
+            else:
+                if identifier.find(seq) != -1:
+                    qcList[q] += 1
+                    yield r
 #*********************************************************#
 
 
 # Find our fasta entries!
-records = find_entry(infasta, query, query_counts, case_sensitive)
+records = find_entry(infasta, query, query_counts, case_sensitive, regexp)
 
 # Write to outfasta
 fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
