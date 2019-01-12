@@ -208,14 +208,17 @@ query_counts = [0] * len(query)
 def find_entry(infasta, qList, qcList, caseSensitive, regExp):
     for r in SeqIO.parse(infasta, "fasta"):
         identifier = r.id if caseSensitive == True else r.id.upper()
-        for q in xrange(len(qList)):
-            seq = qList[q] if caseSensitive == True else qList[q].upper()
-            if regExp != None:
-                m = re.search(regExp, identifier)
-                if m and (m.group(1) == seq):
-                    qcList[q] += 1
-                    yield r
-            else:
+        if regExp != None:
+            m = re.search(regExp, identifier)
+            if m != None:
+                for q in xrange(len(qList)):
+                    seq = qList[q] if caseSensitive == True else qList[q].upper()
+                    if m.group(1) == seq:
+                        qcList[q] += 1
+                        yield r
+        else:
+            for q in xrange(len(qList)):
+                seq = qList[q] if caseSensitive == True else qList[q].upper()
                 if identifier.find(seq) != -1:
                     qcList[q] += 1
                     yield r
@@ -223,7 +226,11 @@ def find_entry(infasta, qList, qcList, caseSensitive, regExp):
 
 
 # Find our fasta entries!
-records = find_entry(infasta, query, query_counts, case_sensitive, regexp)
+records = find_entry(infasta,
+                     query,
+                     query_counts,
+                     case_sensitive,
+                     r = None if basic_search_override else regexp)
 
 # Write to outfasta
 fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
