@@ -4,6 +4,7 @@
 # Dependencies: biopython, os.path
 
 import sys
+import re
 import os.path
 from Bio import SeqIO
 
