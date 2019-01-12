@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+# version 0.5
 
 # Dependencies: biopython, os.path
 
