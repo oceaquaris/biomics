@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # version 0.5
-
-# Dependencies: biopython, os.path
+# TODO: make query file optional
+# Dependencies: biopython, sys, re, os.path
 
 import sys
 import re
@@ -66,11 +66,11 @@ fasta_entry_count = 0
 # Process command line arguments
 usage = "Usage: faidsrch [OPTION]...\n\n"\
         "  Input/Output:\n"\
-        "    -E, --extended-regexp STR   Extended regular expression (ERE)"\
+        "    -E, --extended-regexp STR   Extended regular expression (ERE)\n"\
         "    -f, --in-fasta        FILE  FASTA file to search in.\n"\
         "    -o, --out-fasta       FILE  FASTA file to output search results to.\n"\
-        "    -s, --out-stats       FILE  File to output tab-delimited stats of search results.\n"\
-        "    -q, --in-query-file   FILE  Query file. One query per line.\n\n"\
+        "    -q, --in-query-file   FILE  Query file. One query per line.\n"\
+        "    -s, --out-stats       FILE  File to output tab-delimited stats of search results.\n\n"\
         "  Search Options:\n"\
         "    -b, --basic-search    Perform a basic search (locate substrings) instead.\n"\
         "                          Default: Extended regexp if specified.\n"\
@@ -207,16 +207,18 @@ query_counts = [0] * len(query)
 #*********************************************************#
 # Memory efficient Python generator function
 def find_entry(infasta, qList, qcList, caseSensitive, regExp):
+    p = re.compile(regExp) if regExp != None else None
     for r in SeqIO.parse(infasta, "fasta"):
-        identifier = r.id if caseSensitive == True else r.id.upper()
+        identifier = r.description if caseSensitive == True else r.description.upper()
+        #print( "%s" % (identifier))
         if regExp != None:
-            m = re.search(regExp, identifier)
-            if m != None:
-                for q in xrange(len(qList)):
-                    seq = qList[q] if caseSensitive == True else qList[q].upper()
-                    if m.group(1) == seq:
-                        qcList[q] += 1
-                        yield r
+            for q in xrange(len(qList)):
+                seq = qList[q] if caseSensitive == True else qList[q].upper()
+                m = p.search(identifier)
+                #print m, m.group(1)
+                if m and m.group(1) == seq:
+                    qcList[q] += 1
+                    yield r
         else:
             for q in xrange(len(qList)):
                 seq = qList[q] if caseSensitive == True else qList[q].upper()
@@ -225,13 +227,16 @@ def find_entry(infasta, qList, qcList, caseSensitive, regExp):
                     yield r
 #*********************************************************#
 
-
+r = None
+if basic_search_override == False:
+    r = regexp
+print(r)
 # Find our fasta entries!
 records = find_entry(infasta,
                      query,
                      query_counts,
                      case_sensitive,
-                     r = None if basic_search_override else regexp)
+                     r)
 
 # Write to outfasta
 fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
