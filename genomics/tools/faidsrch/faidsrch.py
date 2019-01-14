@@ -13,6 +13,8 @@ from Bio import SeqIO
 
 # MODIFY ME: regexp expression to use to find strings
 regexp = None
+out_regexp = None
+
 
 # MODIFY ME: Input file name
 infasta = None
@@ -45,6 +47,8 @@ query_counts = None
 basic_search = False
 basic_search_override = False
 
+tab_delimited_output = False
+
 # MODIFY ME: boolean
 #   Perform a case sensitive search?
 case_sensitive = True
@@ -66,11 +70,15 @@ fasta_entry_count = 0
 # Process command line arguments
 usage = "Usage: faidsrch [OPTION]...\n\n"\
         "  Input/Output:\n"\
-        "    -E, --extended-regexp STR   Extended regular expression (ERE)\n"\
+        "    -E, --extended-regexp PAT   Extended regular expression for searching text.\n"\
         "    -f, --in-fasta        FILE  FASTA file to search in.\n"\
-        "    -o, --out-fasta       FILE  FASTA file to output search results to.\n"\
+        "    -o, --out-file        FILE  File to output search results to.\n"\
+        "                                Default file format is FASTA, unless -t is specified.\n"\
         "    -q, --in-query-file   FILE  Query file. One query per line.\n"\
-        "    -s, --out-stats       FILE  File to output tab-delimited stats of search results.\n\n"\
+        "    -s, --out-stats       FILE  File to output tab-delimited stats of search results.\n"\
+        "    -t, --tab-delimited   PAT   Output the header as a tab-seperated file.\n"\
+        "                                PAT specifies the extended regular expression pattern\n"\
+        "                                to use to format the FASTA header.\n\n"\
         "  Search Options:\n"\
         "    -b, --basic-search    Perform a basic search (locate substrings) instead.\n"\
         "                          Default: Extended regexp if specified.\n"\
@@ -91,7 +99,7 @@ while arg < len(sys.argv):
         elif sys.argv[arg] == "-f" or sys.argv[arg] == "--in-fasta":
             state = 2
             arg += 1
-        elif sys.argv[arg] == "-o" or sys.argv[arg] == "--out-fasta":
+        elif sys.argv[arg] == "-o" or sys.argv[arg] == "--out-file":
             state = 3
             arg += 1
         elif sys.argv[arg] == "-s" or sys.argv[arg] == "--out-stats":
@@ -99,6 +107,9 @@ while arg < len(sys.argv):
             arg += 1
         elif sys.argv[arg] == "-q" or sys.argv[arg] == "--in-query-file":
             state = 5
+            arg += 1
+        elif sys.argv[arg] == "-t" or sys.argv[arg] == "--tab-delimited":
+            state = 6
             arg += 1
         elif sys.argv[arg] == "-b" or sys.argv[arg] == "--basic-search":
             basic_search_override = True
@@ -140,6 +151,11 @@ while arg < len(sys.argv):
     # -q, --in-query-file
     elif state == 5:
         inquery = sys.argv[arg]
+        state = 0
+        arg += 1
+    elif state == 6:
+        out_regexp = sys.argv[arg]
+        tab_delimited_output = True
         state = 0
         arg += 1
     else:
@@ -215,10 +231,11 @@ def find_entry(infasta, qList, qcList, caseSensitive, regExp):
             for q in xrange(len(qList)):
                 seq = qList[q] if caseSensitive == True else qList[q].upper()
                 m = p.search(identifier)
-                #print m, m.group(1)
-                if m and m.group(1) == seq:
-                    qcList[q] += 1
-                    yield r
+                if m:
+                    for g in xrange(0, p.groups):
+                        if m.group(g) == seq:
+                            qcList[q] += 1
+                            yield r
         else:
             for q in xrange(len(qList)):
                 seq = qList[q] if caseSensitive == True else qList[q].upper()
@@ -239,7 +256,22 @@ records = find_entry(infasta,
                      r)
 
 # Write to outfasta
-fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
+if tab_delimited_output:
+    p = re.compile(out_regexp)
+    outfastaraw = open(outfasta, "w+")
+    for record in records:
+        m = p.search(record.description)
+        if m:
+            for n in xrange(p.groups):
+                outfastaraw.write("%s\t" % m.group(n))
+            outfastaraw.write("%s\n" % record.seq)
+        else:
+            outfastaraw.write("%s\t" % record.description)
+            for n in xrange(p.groups - 1):
+                outfastaraw.write("\t")
+            outfastaraw.write("%s\n" % record.seq)
+else:
+    fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
 
 # Write to outstats
 if outstats != None:
