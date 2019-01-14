@@ -223,55 +223,55 @@ query_counts = [0] * len(query)
 #*********************************************************#
 # Memory efficient Python generator function
 def find_entry(infasta, qList, qcList, caseSensitive, regExp):
-    p = re.compile(regExp) if regExp != None else None
-    for r in SeqIO.parse(infasta, "fasta"):
-        identifier = r.description if caseSensitive == True else r.description.upper()
+    pattern = re.compile(regExp) if regExp != None else None
+    for record in SeqIO.parse(infasta, "fasta"):
+        identifier = record.description if caseSensitive == True else record.description.upper()
         #print( "%s" % (identifier))
         if regExp != None:
-            for q in xrange(len(qList)):
-                seq = qList[q] if caseSensitive == True else qList[q].upper()
-                m = p.search(identifier)
-                if m:
-                    for g in xrange(0, p.groups):
-                        if m.group(g) == seq:
-                            qcList[q] += 1
-                            yield r
+            for query_index in xrange(len(qList)):
+                query = qList[query_index] if caseSensitive == True else qList[query_index].upper()
+                match = pattern.search(identifier)
+                if match:
+                    for group_index in xrange(pattern.groups):
+                        if match.group(group_index + 1) == query:
+                            qcList[query_index] += 1
+                            yield record
         else:
-            for q in xrange(len(qList)):
-                seq = qList[q] if caseSensitive == True else qList[q].upper()
-                if identifier.find(seq) != -1:
-                    qcList[q] += 1
-                    yield r
+            for query_index in xrange(len(qList)):
+                query = qList[query_index] if caseSensitive == True else qList[query_index].upper()
+                if identifier.find(query) != -1:
+                    qcList[query_index] += 1
+                    yield record
 #*********************************************************#
 
-r = None
-if basic_search_override == False:
-    r = regexp
-print(r)
+
 # Find our fasta entries!
 records = find_entry(infasta,
                      query,
                      query_counts,
                      case_sensitive,
-                     r)
+                     regexp if basic_search_override == False else None)
 
 # Write to outfasta
 if tab_delimited_output:
-    p = re.compile(out_regexp)
+    pattern = re.compile(out_regexp)
     outfastaraw = open(outfasta, "w+")
     for record in records:
-        m = p.search(record.description)
-        if m:
-            for n in xrange(p.groups):
-                outfastaraw.write("%s\t" % m.group(n))
+        match = pattern.search(record.description)
+        if match:
+            for group_index in xrange(pattern.groups):
+                outfastaraw.write("%s\t" % match.group(group_index + 1))
             outfastaraw.write("%s\n" % record.seq)
         else:
             outfastaraw.write("%s\t" % record.description)
-            for n in xrange(p.groups - 1):
+            for group_index in xrange(pattern.groups - 1):
                 outfastaraw.write("\t")
             outfastaraw.write("%s\n" % record.seq)
+    outfastaraw.close()
 else:
     fasta_entry_count = SeqIO.write(records, outfasta, "fasta")
+    # Print how much we wrote
+    print("Saved %i records from %s to %s" % (fasta_entry_count, infasta, outfasta))
 
 # Write to outstats
 if outstats != None:
@@ -284,6 +284,3 @@ if outstats != None:
         outstatsraw.write("%s\t%s\n" % (query[i], query_counts[i]))
     # close file
     outstatsraw.close()
-
-# Print how much we wrote
-print("Saved %i records from %s to %s" % (fasta_entry_count, infasta, outfasta))
