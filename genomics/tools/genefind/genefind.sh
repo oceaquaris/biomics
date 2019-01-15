@@ -12,15 +12,16 @@
 # MODIFY ME: The node access policy for your job.
 #PBS -l naccesspolicy=shared
 
+# version 0.3
 
 ###############################################################################
 # Load necessary modules
 
 # MODIFY ME: path to directory of module entries (e.g. /apps/group/bioinfo/modules).
-module use /apps/group/bioinfo/modules
+module load bioinfo
 
 # Load bedops, the tool this script will be using.
-module load bedops
+module load bedops BEDTools
 ###############################################################################
 
 
@@ -80,12 +81,7 @@ fgenes_bname="found_genes"
 #  + Names of intermediate and/or output files.
 fgenes_bed="${genefindwd}/${fgenes_bname}.bed"
 fgenes_gtf="${genefindwd}/${fgenes_bname}.gtf"
-fgenes_gff="${genefindwd}/${fgenes_bname}.gff3"
-
-# MODIFY ME:
-#  + The minimum overlap length (in nts) of the SNP ranges and the gene positions.
-#  + This should be an integer. Default should be set to 1.
-min_overlap=1
+fgenes_gff="${genefindwd}/${fgenes_bname}.gff"
 ###############################################################################
 
 
@@ -116,12 +112,8 @@ if [[ -e "${genes_gtf}" ]]; then
     # Convert *.gtf to *.bed
     gtf2bed < "${genes_gtf}" > "${igenes_bed}"
 
-    # find genes around SNP locations.
-    bedops --element-of ${min_overlap} "${igenes_bed}" "${snps_bed}" > "${fgenes_bed}"
-
-    # awk command found at: https://www.biostars.org/p/64346/
-    # Convert *.bed back to *.gtf
-    awk '{print $1"\t"$7"\t"$8"\t"($2+1)"\t"$3"\t"$5"\t"$6"\t"$9"\t"(substr($0, index($0,$10)))}' "${fgenes_bed}" > "${fgenes_gtf}"
+    # find genes around SNP locations. Report SNP range and gene overlap.
+    bedtools intersect -wa -wb -a "${snps_bed}" -b "${igenes_bed}" -sorted > "${fgenes_bed}"
 
 # Search for a *.gff file if there is no *.gtf file.
 # NOTE: If gff2bed fails, it is probably because the input file is not gff compliant.
@@ -135,18 +127,14 @@ elif [[ -e "${genes_gff}" ]]; then
     gff2bed < "${genes_gff}" > "${igenes_bed}"
 
     # find genes around SNP locations.
-    bedops --element-of ${min_overlap} "${igenes_bed}" "${snps_bed}" > "${fgenes_bed}"
-
-    # awk command found at: https://www.biostars.org/p/64346/
-    # Convert *.bed back to *.gtf
-    awk '{print $1"\t"$7"\t"$8"\t"($2+1)"\t"$3"\t"$5"\t"$6"\t"$9"\t"(substr($0, index($0,$10)))}' "${fgenes_bed}" > "${fgenes_gff}"
+    bedtools intersect -wa -wb -a "${snps_bed}" -b "${igenes_bed}" -sorted > "${fgenes_bed}"
 
 # Search for a *.bed file if ther is no *.gtf or *.gff file.
 # NOTE: This is a pretty robust process. Only the first three columns of bed file
 #       compliance are needed.
 elif [[ -e "${genes_bed}" ]]; then
-    # find genes around SNP locations.
-    bedops --element-of ${min_overlap} "${genes_bed}" "${snps_bed}" > "${fgenes_bed}"
+    # Find genes around SNP locations. Report SNP range and gene overlap.
+    bedtools intersect -wa -wb -a "${snps_bed}" -b "${genes_bed}" -sorted > "${fgenes_bed}"
 
 # Print error messages otherwise.
 else
