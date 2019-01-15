@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-
+# version 0.1
 # Dependencies: sys, os.path
 
 import copy
@@ -115,7 +115,7 @@ def partition(tag_list, distribution_list, first, last):
 def quickSortHelper(tag_list, distribution_list, first, last):
     if first < last:
         splitpoint = partition(tag_list, distribution_list, first, last)
-        
+
         quickSortHelper(tag_list, distribution_list, first, splitpoint - 1)
         quickSortHelper(tag_list, distribution_list, splitpoint + 1, last)
 #*********************************************************#
@@ -351,4 +351,3 @@ with open(in_sam, "r") as in_sam_raw:
 out_tagpos_raw.close()
 #*********************************************************#
 #*****************************************************************************#
-
