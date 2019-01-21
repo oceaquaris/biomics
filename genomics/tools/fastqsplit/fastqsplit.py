@@ -4,7 +4,7 @@ import sys
 import re
 import os.path
 
-fastqsplit_version = "v0.1"
+fastqsplit_version = "v0.2"
 seq_id_regexp = None
 unpaired_reads_filepath = None
 unpaired_mode = False
@@ -14,13 +14,21 @@ paired_mode = False
 
 usage = "Usage: fastqsplit.py [OPTION]...\n"\
         "  Input/Output:\n"\
-        "    -E, --extended-regexp PAT\n"\
-        "    -r, --unpaired-reads\n"\
-        "    -1, --paired-reads1\n"\
-        "    -2, --paired-reads2\n\n"\
+        "    -E, --extended-regexp PAT   Extended regular expression for searching fastq seq id.\n"\
+        "                                Suggested regexp: '@(.*?):.*?:(.*?):(.*?):.*'\n"\
+        "    -r, --unpaired-reads  FILE  File path to unpaired reads fastq file.\n"\
+        "                                Incompatible with options:\n"\
+        "                                    -1, --paired-reads1\n"\
+        "                                    -2, --paired-reads2\n"\
+        "    -1, --paired-reads1   FILE  File path to first paired reads fastq file.\n"\
+        "                                Incompatible with option:\n"\
+        "                                    -r, --unpaired-reads\n"\
+        "    -2, --paired-reads2   FILE  File path to second paired reads fastq file.\n"\
+        "                                Incompatible with option:\n"\
+        "                                    -r, --unpaired-reads\n\n"\
         "  Miscellaneous:\n"\
-        "    -h, --help\n"\
-        "    -v, --version\n"
+        "    -h, --help                  Display this help message.\n"\
+        "    -v, --version               Print the version of this script.\n"
 
 arg = 1
 state = 0
@@ -82,17 +90,18 @@ if seq_id_regexp == None:
     print("Regular expression needed.\n")
     print(usage)
     quit(1)
-if not os.path.isfile(unpaired_reads_filepath):
+if unpaired_reads_filepath and not os.path.isfile(unpaired_reads_filepath):
     print("The file %s does not exist. Exiting.\n" % unpaired_reads_filepath)
     quit(1)
-if not os.path.isfile(paired_reads1_filepath):
+if paired_reads1_filepath and not os.path.isfile(paired_reads1_filepath):
     print("The file %s does not exist. Exiting.\n" % paired_reads1_filepath)
     quit(1)
-if not os.path.isfile(paired_reads2_filepath):
+if paired_reads2_filepath and not os.path.isfile(paired_reads2_filepath):
     print("The file %s does not exist. Exiting.\n" % paired_reads2_filepath)
     quit(1)
 
 pattern = re.compile(seq_id_regexp) if seq_id_regexp != None else None
+
 if unpaired_reads_filepath:
     fastq_groups = [None] * 2
     fastq_groups[0] = []
@@ -102,14 +111,14 @@ if unpaired_reads_filepath:
     group_index = -1
     for line in unpaired_reads_file:
         quartet += 1
-        if quartet == 1
+        if quartet == 1:
             match = pattern.search(line)
             if match:
-                for index in xrange(pattern.group):
+                key = ""
+                for index in xrange(pattern.groups):
                     key = key + match.group(index + 1) + "."
-                    key = ""
                 for index in xrange(len(fastq_groups[0])):
-                    if fastq[index] == tmpstr:
+                    if fastq[index] == key:
                         group_index = index
                 if group_index == -1:
                     fastq_groups[0].append(key)
@@ -119,6 +128,11 @@ if unpaired_reads_filepath:
         fastq_groups[1][group_index].write(line)
         if quartet == 4:
             quartet = 0
+    # close files
+    for file in fastq_groups[1]:
+        file.close()
+    unpaired_reads_file.close()
+
 if paired_reads1_filepath and paired_reads2_filepath:
     fastq_groups = [None] * 3
     fastq_groups[0] = []
@@ -130,21 +144,30 @@ if paired_reads1_filepath and paired_reads2_filepath:
     group_index = -1
     for line in paired_reads1_file:
         quartet += 1
-        if quartet == 1
+        if quartet == 1:
             match = pattern.search(line)
             if match:
-                for index in xrange(pattern.group):
-                    key = key + match.group(index + 1) + "."
-                    key = ""
+                key = ""
+                for index in xrange(pattern.groups):
+                    key += match.group(index + 1) + "."
                 for index in xrange(len(fastq_groups[0])):
-                    if fastq[index] == tmpstr:
+                    if fastq_groups[0][index] == key:
                         group_index = index
+                        break
                 if group_index == -1:
                     fastq_groups[0].append(key)
-                    fastq_groups[1].append(open(key + "R1." + "fastq", "w+"))
-                    fastq_groups[2].append(open(key + "R2." + "fastq", "w+"))
+                    fastq_groups[1].append(open(key + "R1.fastq", "w+"))
+                    fastq_groups[2].append(open(key + "R2.fastq", "w+"))
                     group_index = len(fastq_groups[0]) - 1
         fastq_groups[1][group_index].write(line)
         fastq_groups[2][group_index].write(paired_reads2_file.next())
         if quartet == 4:
             quartet = 0
+            group_index = -1
+    #close files
+    for file in fastq_groups[1]:
+        file.close()
+    for file in fastq_groups[2]:
+        file.close()
+    paired_reads1_file.close()
+    paired_reads2_file.close()
