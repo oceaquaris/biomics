@@ -119,7 +119,7 @@ if unpaired_reads_filepath:
                     key = key + match.group(index + 1) + "."
                 for index in xrange(len(fastq_groups[0])):
                     if fastq[index] == key:
-                        group_index = index
+                        group_index = index # FIXME: this is wrong; see paired read algorithm
                 if group_index == -1:
                     fastq_groups[0].append(key)
                     newfn = key + "fastq"
