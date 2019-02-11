@@ -51,7 +51,8 @@ samtools view \
     -h \
     -f 3 \
     -U $SPLIT_IMPROPER_SAM \
-    -o $SPLIT_PROPER_SAM
+    -o $SPLIT_PROPER_SAM \
+    $PREADS_SAM
 
 #Split our properly mapped file into multiple files based on chromosome alignment
 for chr in {{1..7}{A,B,D},Un}
@@ -67,7 +68,8 @@ samtools view \
     -h \
     -f 12 \
     -U $SPLIT_IMPROPER_INTERCHR_MULTICHR_SAM \
-    -o $SPLIT_IMPROPER_UNMAPPED_SAM
+    -o $SPLIT_IMPROPER_UNMAPPED_SAM \
+    $SPLIT_IMPROPER_SAM
 
 # Miscellaneous commands; not used
 # View only reads that are properly paired, and count the number of lines/reads:
