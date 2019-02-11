@@ -3,7 +3,7 @@
 #PBS -q standby
 #PBS -l nodes=1:ppn=1,walltime=4:00:00
 
-cd $RCAC_SCRATCH/genomes/
+cd $RCAC_SCRATCH/assembly/
 
 # load modules
 module load bioinfo
