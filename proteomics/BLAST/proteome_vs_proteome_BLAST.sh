@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #PBS -N proteome
 #PBS -q scholar
-#PBS -l nodes=1:ppn=4,walltime=4:00:00
+#PBS -l nodes=1:ppn=4,walltime=4:00:00,naccesspolicy=singlejob
 
 WRK_DIR="$PBS_O_WORKDIR"
 MAX_EVALUE="1e-3"
