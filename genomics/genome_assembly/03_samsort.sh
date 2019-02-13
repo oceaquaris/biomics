@@ -11,7 +11,8 @@ cd $PBS_O_WORKDIR
 for file in 036570_15_S134_bwa_mem_pair_aln.proper.{{1..7}{A,B,D},Un}.sam
 do
     # give ourselves plenty of memory
-    java -jar -Xms64g -Xmx120g picard.jar SortSam \
+    # nasty hack to alter memory settings while getting picard to work
+    java -jar -Xms64g -Xmx120g /group/bioinfo/apps/apps/picard-tools-2.18.2/picard.jar SortSam \
         INPUT="$file" \
         OUTPUT="${file%.*}.bam" \
         SORT_ORDER=coordinate
