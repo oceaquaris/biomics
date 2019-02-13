@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #PBS -N samsort
 #PBS -q standby
-#PBS -l nodes=1:ppn=1,walltime=4:00:00,,mem=128gb,naccesspolicy=singlejob
+#PBS -l nodes=1:ppn=1,walltime=4:00:00,mem=128gb,naccesspolicy=singlejob
 
 module load bioinfo
 module load picard-tools
