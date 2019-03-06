@@ -21,6 +21,7 @@ ${BINARY} \
     -o "pregraph_${KMER_SIZE}mer" \
     -K ${KMER_SIZE} \
     -p $PBS_NUM_PPN \
+    -a ${INIT_MEMORY_ASSUMPTION} \
     -R \
     1>"pregraph_${KMER_SIZE}mer.log" \
     2>"pregraph_${KMER_SIZE}mer.err"
