@@ -17,5 +17,5 @@ ${BINARY} \
     contig \
     -g "${GRAPH_PREFIX}" \
     -R \
-    1>"${GRAPH_PREFIX}.log" \
-    2>"${GRAPH_PREFIX}.err"
+    1>"contig_${KMER_SIZE}.log" \
+    2>"contig_${KMER_SIZE}.err"
