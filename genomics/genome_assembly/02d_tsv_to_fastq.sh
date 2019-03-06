@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -N tsvsplit
+#PBS -N tsv2fastq
 #PBS -q standby
 #PBS -l nodes=1:ppn=1,walltime=4:00:00
 
@@ -28,7 +28,11 @@ P2L4="${reverse%.*}.HH2K3DSXX.4.tsv"
 
 FILES="$P1L1 $P1L2 $P1L3 $P1L4 $P2L1 $P2L2 $P2L3 $P2L4 $P1L1 $P1L2 $P1L3 $P1L4 $P2L1 $P2L2 $P2L3 $P2L4"
 
+#get line count
+wc -l $FILES >> summary.txt
+
 for file in $FILES
 do
-    cat $file | tr '\t' '\n' > "${file%.*}.fastq"
+    #first remove tailing newline character
+    perl -pe 'chomp if eof' $file | tr '\t' '\n' > "${file%.*}.fastq"
 done
