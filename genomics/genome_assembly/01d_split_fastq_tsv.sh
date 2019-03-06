@@ -1,7 +1,7 @@
 #!/bin/bash -l
-#PBS -N fastq2tsv
+#PBS -N tsvsplit
 #PBS -q standby
-#PBS -l nodes=1:ppn=2,walltime=4:00:00
+#PBS -l nodes=1:ppn=1,walltime=4:00:00
 
 cd $PBS_O_WORKDIR
 
