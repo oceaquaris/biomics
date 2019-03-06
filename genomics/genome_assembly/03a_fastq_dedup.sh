@@ -2,6 +2,7 @@
 #PBS -N tsvsplit
 #PBS -q standby
 #PBS -l nodes=1:ppn=20,walltime=4:00:00,naccesspolicy=singlejob
+#PBS -l epilogue=/scratch/snyder/r/rshrote/epilogue.sh
 
 cd $PBS_O_WORKDIR
 
