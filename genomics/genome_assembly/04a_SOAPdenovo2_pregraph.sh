@@ -6,7 +6,7 @@
 
 cd $PBS_O_WORKDIR
 
-BINARY="$RCAC_SCRATCH/tools/SOAPdenovo2/SOAPdenovo-127mer"
+SOAPDENOVO2="$RCAC_SCRATCH/tools/SOAPdenovo2/SOAPdenovo-127mer"
 CONFIG_FILE="$RCAC_SCRATCH/assembly/04_SOAPdenovo2/04_assembly.config"
 # in GB!
 INIT_MEMORY_ASSUMPTION=150
@@ -15,7 +15,7 @@ KMER_SIZE=89
 #KMER_SIZE=105
 
 
-${BINARY} \
+${SOAPDENOVO2} \
     pregraph \
     -s "${CONFIG_FILE}" \
     -o "pregraph_${KMER_SIZE}mer" \
