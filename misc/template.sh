@@ -126,11 +126,10 @@ logfile_terminate() {
 ############################################################
 
 
+############################################################
 # Global variables required for stopwatch_start and stopwatch_stop
 tmpstart=0
 tmpend=0
-
-
 ############################################################
 # Usage: stopwatch_start
 stopwatch_start() {
@@ -162,22 +161,15 @@ stopwatch_stop() {
 ######################## Begin Computational Protocols #########################
 ################################################################################
 
-
-
 ############################################################
 # Begin logfile
 ############################################################
-if [ "${debug_logfile}" -eq "1" ]
-then
-    logfile_initialize
-fi
+if [ "${debug_logfile}" -eq "1" ]; then logfile_initialize; fi
 
 
 ############################################################
 # End logfile
 ############################################################
-if [ "${debug_logfile}" -eq "1" ]
-then
-    logfile_terminate
-fi
+if [ "${debug_logfile}" -eq "1" ]; then logfile_terminate; fi
+
 # End of Operations; EOF
