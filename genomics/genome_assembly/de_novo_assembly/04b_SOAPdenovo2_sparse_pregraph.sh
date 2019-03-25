@@ -7,12 +7,14 @@
 cd $PBS_O_WORKDIR
 
 SOAPDENOVO2="$RCAC_SCRATCH/tools/SOAPdenovo2/SOAPdenovo-127mer"
-CONFIG_FILE="04_assembly.config"
+CONFIG_FILE="assembly_unipair.config"
+INIT_MEMORY_ASSUMPTION=395
 KMER_SIZE=89
 #KMER_SIZE=75
 #KMER_SIZE=105
-ESTIMATED_GENOME_SIZE=17000000000
+ESTIMATED_GENOME_SIZE=18000000000
 
+# may need to use -a ${INIT_MEMORY_ASSUMPTION} \
 ${SOAPDENOVO2} \
     sparse_pregraph \
     -s "${CONFIG_FILE}" \
@@ -20,6 +22,6 @@ ${SOAPDENOVO2} \
     -p $PBS_NUM_PPN \
     -z ${ESTIMATED_GENOME_SIZE} \
     -R \
-    -o "sparse_pregraph_${KMER_SIZE}mer" \
-    1>"sparse_pregraph_${KMER_SIZE}mer.log" \
-    2>"sparse_pregraph_${KMER_SIZE}mer.err"
+    -o "${KMER_SIZE}mer/sparse_pregraph_${KMER_SIZE}mer" \
+    1>"${KMER_SIZE}mer/sparse_pregraph_${KMER_SIZE}mer.log" \
+    2>"${KMER_SIZE}mer/sparse_pregraph_${KMER_SIZE}mer.err"
