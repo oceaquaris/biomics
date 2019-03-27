@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #PBS -N pregraph
 #PBS -q mohamm20
-#PBS -l nodes=1:ppn=20,walltime=336:00:00,naccesspolicy=singlejob
+#PBS -l nodes=1:ppn=20,mem=155gb,walltime=336:00:00,naccesspolicy=singlejob
 #PBS -l epilogue=/scratch/snyder/r/rshrote/epilogue.sh
 
 cd $PBS_O_WORKDIR
